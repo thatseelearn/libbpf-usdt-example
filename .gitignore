@@ -1,0 +1,5 @@
+vmlinux.h
+target_app
+usdt_tracer
+usdt_tracer.skel.h
+.output/
