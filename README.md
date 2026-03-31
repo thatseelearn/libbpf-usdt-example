@@ -66,6 +66,7 @@ libbpf-usdt-example/
 ├── usdt_tracer.bpf.c     # BPF 프로그램 (커널에서 실행)
 ├── usdt_tracer.c          # 사용자 공간 로더 (BPF 프로그램 관리)
 ├── usdt_tracer.h          # 공유 데이터 구조체 정의
+├── trace_usdt.bt          # bpftrace 스크립트 (빠른 테스트용)
 ├── Makefile               # 빌드 시스템
 └── README.md              # 이 파일
 ```
@@ -262,17 +263,12 @@ DTRACE_PROBE2(               uprobe 트리거
 
 ## bpftrace를 이용한 빠른 테스트
 
-libbpf 트레이서를 빌드하기 전에, bpftrace로 프로브가 동작하는지 빠르게 확인할 수 있습니다:
+libbpf 트레이서를 빌드하기 전에, bpftrace로 프로브가 동작하는지 빠르게 확인할 수 있습니다.
+
+스크립트는 [`trace_usdt.bt`](trace_usdt.bt)에 있으며, `usdt_tracer`와 동일한 형식으로 출력합니다:
 
 ```bash
-# 모든 프로브 이벤트 출력
-sudo bpftrace -e '
-usdt:./target_app:my_app:request_start {
-    printf("START request #%d → %s\n", arg0, str(arg1));
-}
-usdt:./target_app:my_app:request_end {
-    printf("END   request #%d, latency=%d ms\n", arg0, arg1);
-}'
+sudo bpftrace trace_usdt.bt
 ```
 
 ## 트러블슈팅

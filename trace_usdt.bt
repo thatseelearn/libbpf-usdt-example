@@ -1,0 +1,32 @@
+/*
+ * trace_usdt.bt - bpftrace 스크립트 (usdt_tracer와 동일한 출력 형식)
+ *
+ * 사용법:
+ *   sudo bpftrace trace_usdt.bt
+ *
+ * target_app이 실행 중이어야 합니다.
+ */
+
+usdt:./target_app:my_app:request_start
+{
+    printf("%s.%03d [PID %5d] START  request #%-6d → %s\n",
+           strftime("%H:%M:%S", nsecs), (nsecs / 1000000) % 1000,
+           pid, arg0, str(arg1));
+}
+
+usdt:./target_app:my_app:request_end
+{
+    if (arg1 < 100) {
+        printf("%s.%03d [PID %5d] END    request #%-6d   %4d ms  [FAST]\n",
+               strftime("%H:%M:%S", nsecs), (nsecs / 1000000) % 1000,
+               pid, arg0, arg1);
+    } else if (arg1 < 200) {
+        printf("%s.%03d [PID %5d] END    request #%-6d   %4d ms  [NORMAL]\n",
+               strftime("%H:%M:%S", nsecs), (nsecs / 1000000) % 1000,
+               pid, arg0, arg1);
+    } else {
+        printf("%s.%03d [PID %5d] END    request #%-6d   %4d ms  [SLOW]\n",
+               strftime("%H:%M:%S", nsecs), (nsecs / 1000000) % 1000,
+               pid, arg0, arg1);
+    }
+}

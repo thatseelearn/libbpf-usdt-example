@@ -3,3 +3,5 @@ target_app
 usdt_tracer
 usdt_tracer.skel.h
 .output/
+.claude/*.local.*
+.vscode/settings.json
