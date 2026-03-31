@@ -67,6 +67,8 @@ libbpf-usdt-example/
 ├── usdt_tracer.c          # 사용자 공간 로더 (BPF 프로그램 관리)
 ├── usdt_tracer.h          # 공유 데이터 구조체 정의
 ├── trace_usdt.bt          # bpftrace 스크립트 (빠른 테스트용)
+├── bcc/
+│   └── usdt_tracer.py    # BCC 기반 트레이서 (Python)
 ├── Makefile               # 빌드 시스템
 └── README.md              # 이 파일
 ```
@@ -259,6 +261,48 @@ DTRACE_PROBE2(               uprobe 트리거
   request_start,              ring buffer에
   id, endpoint)               이벤트 기록     ──────▶  handle_event()
                                                        화면에 출력
+```
+
+## BCC를 이용한 트레이서
+
+[`bcc/usdt_tracer.py`](bcc/usdt_tracer.py)는 libbpf 버전(`usdt_tracer`)과 동일한 동작을 BCC(Python)로 구현한 트레이서입니다.
+
+### libbpf vs BCC 비교
+
+| 항목 | libbpf (CO-RE) | BCC |
+|------|----------------|-----|
+| 언어 | C | Python + C (인라인) |
+| 컴파일 | 빌드 타임 | 런타임 (실행 시 clang 호출) |
+| 커널 이벤트 전달 | Ring buffer | Perf buffer |
+| USDT 인자 접근 | `BPF_USDT()` 매크로 | `bpf_usdt_readarg()` |
+| 의존성 | libbpf, bpftool | python3-bpfcc, clang |
+| 배포 | 바이너리 배포 가능 | Python + LLVM 런타임 필요 |
+
+### 의존성 설치
+
+```bash
+sudo apt install python3-bpfcc
+```
+
+### 실행
+
+```bash
+# 터미널 1
+./target_app
+
+# 터미널 2
+sudo python3 bcc/usdt_tracer.py -p $(pidof target_app)
+```
+
+출력은 `usdt_tracer`와 동일합니다:
+```
+=== USDT Tracer (BCC) ===
+Attached to PID 12345 (/usr/bin/target_app)
+Tracing probes: my_app:{request_start, request_end, app_ready}
+Ctrl+C to stop
+
+14:23:01.123 [PID 12345] START  request #3      → /api/products
+14:23:01.280 [PID 12345] END    request #3        157 ms  [NORMAL]
 ```
 
 ## bpftrace를 이용한 빠른 테스트
